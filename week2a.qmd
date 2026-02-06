@@ -1,0 +1,14 @@
+---
+title: "week2a"
+author: "Zihao Yu"
+format: html
+editor: visual
+---
+
+# 1. How will I tackle the problem?
+
+I will select 6 movies (TV shows, books, songs, etc.), then find at least 5 people to rate them on a scale of 1–5; items not viewed will be left blank and treated as missing values. Next, I will create a data table in an SQL database to record the data, then import it into R for analysis using dplyr, similar to the first assignment.
+
+# 2. What data challenges do I anticipate?
+
+Not everyone will have seen them all, resulting in numerous missing ratings. In extreme cases, someone might have seen only one of them, so I'll need to find new participants or switch to more popular items. Additionally, this is my first time working with SQL, which may extend the time needed to complete the assignment.
