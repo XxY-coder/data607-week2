@@ -12,3 +12,82 @@ I will select 6 movies (TV shows, books, songs, etc.), then find at least 5 peop
 # 2. What data challenges do I anticipate?
 
 Not everyone will have seen them all, resulting in numerous missing ratings. In extreme cases, someone might have seen only one of them, so I'll need to find new participants or switch to more popular items. Additionally, this is my first time working with SQL, which may extend the time needed to complete the assignment.
+
+# 3. Connect to SQL
+
+```{r}
+library(DBI)
+library(RPostgres)
+library(tidyverse)
+
+con <- dbConnect(
+  RPostgres::Postgres(),
+  dbname = "data_607",
+  host   = "localhost",
+  port   = 5432,
+  user   = "postgres"
+)
+
+ratings_df <- dbGetQuery(con, "
+  SELECT u.user_id, u.name, m.movie_id, m.title, r.rating
+  FROM ratings r
+  JOIN users u  ON r.user_id = u.user_id
+  JOIN movies m ON r.movie_id = m.movie_id
+  ORDER BY u.name, m.movie_id;
+")
+
+users_df  <- dbGetQuery(con, "SELECT user_id, name  FROM users  ORDER BY user_id;")
+movies_df <- dbGetQuery(con, "SELECT movie_id, title FROM movies ORDER BY movie_id;")
+
+dbDisconnect(con)
+
+
+```
+
+# 4. Clean the data
+
+```{r}
+glimpse(ratings_df)
+
+full_grid <- users_df |>
+  crossing(movies_df) |>
+  left_join(ratings_df, by = c("user_id","name","movie_id","title"))
+
+full_grid |>
+  summarise(missing_ratings = sum(is.na(rating)))
+
+```
+
+# 5. Summary the rating from users
+
+```{r}
+count(ratings_df, name)
+count(ratings_df, title)
+summary(ratings_df$rating)
+
+```
+# 6. Finding the average.
+
+```{r}
+user_summary <- full_grid |>
+  group_by(title) |>
+  summarise(
+    n_ratings  = sum(!is.na(rating)),
+    avg_rating = mean(rating, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  arrange(desc(avg_rating))
+
+user_summary
+
+```
+
+# 7. Conclusion
+
+This project collected ratings from 1 to 5 for 6 titles and 7 users. Most people only watched about two objects, leaving 24 blank entries. Based on the code:
+---Zootopia 2 received 3 ratings with an average of 4.3        
+---The SpongeBob Movie: Search for SquarePants received 3 ratings with an average of 3.67		
+---Stranger Things Season 5 received 5 ratings with an average of 3.6        
+---Now You See Me: Now You Don't received 3 ratings with an average of 3.3        
+---Disney's Snow White received 2 ratings with an average of 2.25        
+---Captain America: Brave New World received 2 ratings with an average of 2.0
